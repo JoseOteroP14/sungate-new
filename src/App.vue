@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import MonteriaMap from './components/MonteriaMap.vue'
 </script>
 
 <template>
-  <HelloWorld />
+  <MonteriaMap />
 </template>

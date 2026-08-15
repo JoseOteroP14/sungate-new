@@ -1,0 +1,14 @@
+# Production overlay. Used on the server as:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d
+# The deploy workflow also writes COMPOSE_FILE into the server .env so a
+# bare `docker compose up` picks this overlay automatically.
+#
+# Pulls a pre-built image from GHCR — the server never builds the app.
+
+name: sungate
+
+services:
+  app:
+    image: ${SUNGATE_IMAGE:?Set SUNGATE_IMAGE in .env}
+    build: !reset null
+    pull_policy: always
