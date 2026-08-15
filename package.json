@@ -24,6 +24,7 @@
     "@types/pbf": "^3.0.5",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/tsconfig": "^0.9.1",
+    "esbuild": "^0.28.2",
     "geojson-vt": "^4.0.3",
     "pbf": "^5.1.2",
     "typescript": "~7.0.2",
