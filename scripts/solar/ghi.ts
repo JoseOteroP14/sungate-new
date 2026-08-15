@@ -122,18 +122,17 @@ async function fetchBatch(
   }))
 }
 
-export async function loadOrFetchGhiGrid(
-  options: { force?: boolean; allowStale?: boolean } = {},
-): Promise<GhiGrid> {
-  const force = options.force === true
-  const allowStale = options.allowStale === true
+export async function loadOrFetchGhiGrid(force = false): Promise<GhiGrid> {
   const window = archiveWindow()
   if (!force) {
     const cached = Bun.file(GHI_GRID_PATH)
     if (await cached.exists()) {
       const grid = (await cached.json()) as GhiGrid
-      const fresh = grid.end_date === window.end_date
-      if (grid.model === MODEL && grid.cells.length > 0 && (fresh || allowStale)) {
+      if (
+        grid.model === MODEL &&
+        grid.end_date === window.end_date &&
+        grid.cells.length > 0
+      ) {
         return grid
       }
     }

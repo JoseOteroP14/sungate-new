@@ -507,7 +507,7 @@ watch([showResult, () => props.view], async ([visible]) => {
             />
           </label>
           <label class="consumption">
-            <span>Rendimiento (%)</span>
+            <span>Factor de rendimiento (%)</span>
             <input
               :value="performanceRatioInput"
               type="text"

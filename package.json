@@ -7,7 +7,6 @@
     "dev": "bun --bun vite",
     "build": "bun --bun vue-tsc -b && bun --bun vite build",
     "preview": "bun --bun vite preview",
-    "solar:ghi": "bun --bun scripts/solar/refresh-ghi.ts",
     "solar:build": "bun --bun scripts/solar/build.ts"
   },
   "dependencies": {
