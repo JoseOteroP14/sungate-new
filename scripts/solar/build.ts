@@ -58,7 +58,7 @@ const force = Bun.argv.includes('--force')
 const hasSeq = await Bun.file(GEOJSONSEQ_PATH).exists()
 
 if (!hasSeq || force) {
-  const grid = await loadOrFetchGhiGrid(force)
+  const grid = await loadOrFetchGhiGrid({ force, allowStale: !force })
   const ghiValues = grid.cells.map((cell) => cell.ghi_kwh_m2_year)
   const ghiMin = Math.min(...ghiValues)
   const ghiMax = Math.max(...ghiValues)

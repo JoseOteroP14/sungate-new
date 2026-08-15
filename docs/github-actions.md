@@ -19,8 +19,13 @@ GitHub secrets/vars
 
 | Workflow | Cuándo | Qué |
 |---|---|---|
-| `.github/workflows/ci.yml` | Pull requests a `main` | `bun install`, `vite build`, `docker build` (sin push) |
+| `.github/workflows/ci.yml` | Pull requests a `main` | `bun install`, `vite build`, `docker build` (sin push). La imagen pinta teselas FV con la grilla GHI del repo. |
 | `.github/workflows/deploy.yml` | Push a `main`, o *Run workflow* | Build + push a GHCR + SSH deploy |
+| `.github/workflows/solar-refresh.yml` | Días 1 y 16 de cada mes a las 00:17 America/Bogota (~cada 15 días), o *Run workflow* | Pide a Open-Meteo el año móvil de GHI, commitea `data/solar/ghi-grid.json` si cambió y dispara Deploy para regenerar teselas |
+
+Las teselas que ves en el mapa **no se pintan en el navegador contra la API**. Salen de `public/tiles/overture-buildings.pmtiles`, generado en el build de la imagen a partir de la grilla GHI (Open-Meteo Historical Weather API, modelo ECMWF IFS, ventana de 12 meses con ~2 días de desfase). El job nocturno actualiza esa grilla; el deploy vuelve a calcular `kwh_year` por techo.
+
+Si `main` está protegida, permite a `github-actions[bot]` hacer push o el refresh no podrá commitear.
 
 Rollback: *Actions → Deploy → Run workflow* y pega un tag anterior (`sha-abc1234`). No reconstruye; solo reetiqueta y levanta esa imagen.
 

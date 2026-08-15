@@ -14,9 +14,10 @@ RUN bun install --frozen-lockfile
 FROM base AS build
 COPY --from=install /usr/src/app/node_modules ./node_modules
 COPY . .
-# Produce the Vite client bundle. vue-tsc is omitted here: TypeScript 7's
-# export map does not expose `typescript/lib/tsc`, which vue-tsc still resolves.
+# Paint rooftop kWh from the committed GHI grid, then bundle. vue-tsc is omitted
+# here: TypeScript 7's export map does not expose `typescript/lib/tsc`.
 ENV NODE_ENV=production
+RUN bun --bun scripts/solar/build.ts
 RUN bun --bun vite build
 
 # Non-root nginx (listens on 8080). Stable Alpine as of NGINX 1.28.x.

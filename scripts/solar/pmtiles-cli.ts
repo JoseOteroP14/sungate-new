@@ -1,36 +1,69 @@
-import { mkdir } from 'node:fs/promises'
+import { chmod, mkdir } from 'node:fs/promises'
+import { arch, platform } from 'node:os'
 import { join } from 'node:path'
 
 const VERSION = '1.31.2'
 const TOOLS_DIR = join(import.meta.dir, '../../tools')
-const EXE_PATH = join(TOOLS_DIR, 'pmtiles.exe')
-const ZIP_URL = `https://github.com/protomaps/go-pmtiles/releases/download/v${VERSION}/go-pmtiles_${VERSION}_Windows_x86_64.zip`
+
+type ReleaseAsset = {
+  archive: string
+  binary: string
+}
+
+function releaseAsset(): ReleaseAsset {
+  const os = platform()
+  const cpu = arch() === 'arm64' ? 'arm64' : 'x86_64'
+  if (os === 'win32') {
+    return {
+      archive: `go-pmtiles_${VERSION}_Windows_x86_64.zip`,
+      binary: 'pmtiles.exe',
+    }
+  }
+  if (os === 'linux') {
+    return {
+      archive: `go-pmtiles_${VERSION}_Linux_${cpu}.tar.gz`,
+      binary: 'pmtiles',
+    }
+  }
+  if (os === 'darwin') {
+    return {
+      archive: `go-pmtiles_${VERSION}_Darwin_${cpu}.tar.gz`,
+      binary: 'pmtiles',
+    }
+  }
+  throw new Error(`go-pmtiles no soporta ${os}/${cpu}`)
+}
 
 export async function ensurePmtilesCli(): Promise<string> {
-  if (await Bun.file(EXE_PATH).exists()) {
-    return EXE_PATH
+  const asset = releaseAsset()
+  const binaryPath = join(TOOLS_DIR, asset.binary)
+  if (await Bun.file(binaryPath).exists()) {
+    return binaryPath
   }
 
   await mkdir(TOOLS_DIR, { recursive: true })
-  const zipPath = join(TOOLS_DIR, `go-pmtiles_${VERSION}.zip`)
-  console.log(`Descargando go-pmtiles ${VERSION}…`)
-  const response = await fetch(ZIP_URL)
+  const url = `https://github.com/protomaps/go-pmtiles/releases/download/v${VERSION}/${asset.archive}`
+  const archivePath = join(TOOLS_DIR, asset.archive)
+  console.log(`Descargando go-pmtiles ${VERSION} (${asset.archive})…`)
+  const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`go-pmtiles download ${response.status}`)
   }
-  await Bun.write(zipPath, response)
+  await Bun.write(archivePath, response)
 
-  const unzip = Bun.spawn(
-    ['tar', '-xf', zipPath, '-C', TOOLS_DIR],
-    { stdout: 'inherit', stderr: 'inherit' },
-  )
+  const unzip = Bun.spawn(['tar', '-xf', archivePath, '-C', TOOLS_DIR], {
+    stdout: 'inherit',
+    stderr: 'inherit',
+  })
   if ((await unzip.exited) !== 0) {
     throw new Error('No se pudo descomprimir go-pmtiles')
   }
 
-  const extracted = join(TOOLS_DIR, 'pmtiles.exe')
-  if (!(await Bun.file(extracted).exists())) {
-    throw new Error('pmtiles.exe no apareció en tools/')
+  if (!(await Bun.file(binaryPath).exists())) {
+    throw new Error(`${asset.binary} no apareció en tools/`)
   }
-  return extracted
+  if (platform() !== 'win32') {
+    await chmod(binaryPath, 0o755)
+  }
+  return binaryPath
 }
