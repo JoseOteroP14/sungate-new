@@ -13,11 +13,16 @@ export const MONTERIA_BOUNDS: LngLatBoundsLike = [
   [-75.6694089, 8.9463209],
 ]
 
-/** Centro urbano (Plaza de Bolívar). */
-export const MONTERIA_CENTER: LngLatLike = [-75.8814, 8.755]
+/** Vista inicial ~1.2 km al sur de Plaza de Bolívar. */
+export const MONTERIA_CENTER: LngLatLike = [-75.8814, 8.744]
 
-export const MONTERIA_MIN_ZOOM = 10
 export const MONTERIA_MAX_ZOOM = 18
-export const MONTERIA_INITIAL_ZOOM = 13
+/** Zoom 13 + 7 tics de rueda (MapLibre ≈ 0.15 niveles por tic). */
+export const MONTERIA_INITIAL_ZOOM = 14.06
+export const MONTERIA_MIN_ZOOM = MONTERIA_INITIAL_ZOOM
+
+/** Inclinación inicial (0 = zenital). 60° es el máximo por defecto de MapLibre (Ctrl + arrastrar). */
+export const MONTERIA_INITIAL_PITCH = 60
+export const MONTERIA_MAX_PITCH = 60
 
 export const MONTERIA_TILES_PATH = '/tiles/monteria.pmtiles'

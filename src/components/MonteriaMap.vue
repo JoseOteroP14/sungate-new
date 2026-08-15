@@ -11,7 +11,9 @@ import { createMapcnStyle } from '../map/create-style'
 import {
   MONTERIA_BOUNDS,
   MONTERIA_CENTER,
+  MONTERIA_INITIAL_PITCH,
   MONTERIA_INITIAL_ZOOM,
+  MONTERIA_MAX_PITCH,
   MONTERIA_MAX_ZOOM,
   MONTERIA_MIN_ZOOM,
 } from '../map/monteria'
@@ -54,8 +56,10 @@ onMounted(() => {
     style: createMapcnStyle(theme.value),
     center: MONTERIA_CENTER,
     zoom: MONTERIA_INITIAL_ZOOM,
+    pitch: MONTERIA_INITIAL_PITCH,
     minZoom: MONTERIA_MIN_ZOOM,
     maxZoom: MONTERIA_MAX_ZOOM,
+    maxPitch: MONTERIA_MAX_PITCH,
     maxBounds: MONTERIA_BOUNDS,
     renderWorldCopies: false,
     attributionControl: { compact: true },
