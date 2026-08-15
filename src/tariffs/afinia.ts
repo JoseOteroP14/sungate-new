@@ -183,6 +183,10 @@ const kwhFormat = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0,
 })
 
+const measureFormat = new Intl.NumberFormat('es-CO', {
+  maximumFractionDigits: 2,
+})
+
 const copPerKwhFormat = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -198,10 +202,82 @@ export function formatQuantity(value: number): string {
   return kwhFormat.format(Math.round(value))
 }
 
+export function formatMeasure(value: number): string {
+  return measureFormat.format(value)
+}
+
 export function formatKwh(value: number): string {
   return formatQuantity(value)
 }
 
 export function formatCopPerKwh(value: number): string {
   return `${copPerKwhFormat.format(value)}/kWh`
+}
+
+export type PanelRoi = {
+  investmentCop: number
+  annualSavingsCop: number
+  paybackYears: number | null
+  simpleRoi: number | null
+}
+
+export function estimatePanelRoi(
+  panelCount: number,
+  unitPriceCop: number,
+  monthlySavingsCop: number,
+): PanelRoi | null {
+  if (
+    !Number.isInteger(panelCount) ||
+    panelCount <= 0 ||
+    !(unitPriceCop > 0) ||
+    !Number.isFinite(monthlySavingsCop)
+  ) {
+    return null
+  }
+
+  const investmentCop = panelCount * unitPriceCop
+  const annualSavingsCop = monthlySavingsCop * 12
+  if (annualSavingsCop <= 0) {
+    return {
+      investmentCop,
+      annualSavingsCop: 0,
+      paybackYears: null,
+      simpleRoi: 0,
+    }
+  }
+
+  return {
+    investmentCop,
+    annualSavingsCop,
+    paybackYears: investmentCop / annualSavingsCop,
+    simpleRoi: annualSavingsCop / investmentCop,
+  }
+}
+
+export function formatPayback(years: number): string {
+  if (!Number.isFinite(years) || years < 0) {
+    return '—'
+  }
+  const totalMonths = Math.round(years * 12)
+  if (totalMonths === 0) {
+    return 'menos de 1 mes'
+  }
+  const yearCount = Math.floor(totalMonths / 12)
+  const monthCount = totalMonths % 12
+  const parts: string[] = []
+  if (yearCount === 1) {
+    parts.push('1 año')
+  } else if (yearCount > 1) {
+    parts.push(`${yearCount} años`)
+  }
+  if (monthCount === 1) {
+    parts.push('1 mes')
+  } else if (monthCount > 1) {
+    parts.push(`${monthCount} meses`)
+  }
+  return parts.join(' y ')
+}
+
+export function formatPercent(value: number): string {
+  return `${measureFormat.format(value * 100)} %`
 }

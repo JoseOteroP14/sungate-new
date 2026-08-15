@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import {
+  LngLatBounds,
   Map as MapLibreMap,
   addProtocol,
   removeProtocol,
   type AddProtocolAction,
   type MapGeoJSONFeature,
   type MapMouseEvent,
+  type PaddingOptions,
 } from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
 import RoofSavingsPanel, { type PanelView } from './RoofSavingsPanel.vue'
@@ -46,6 +48,7 @@ function loadStoredEstrato(): Estrato | null {
 
 const theme = useResolvedTheme()
 const container = useTemplateRef<HTMLElement>('container')
+const overlayPanel = useTemplateRef<HTMLElement>('overlayPanel')
 const estrato = ref<Estrato | null>(loadStoredEstrato())
 const consumption = ref('')
 const selectedRoof = ref<SelectedRoof | null>(null)
@@ -90,11 +93,74 @@ function selectRoof(roof: SelectedRoof | null) {
   applyRoofSelection(roof?.id)
 }
 
+function roofCenter(
+  feature: MapGeoJSONFeature,
+  fallback: [number, number],
+): [number, number] {
+  const { geometry } = feature
+  if (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon') {
+    return fallback
+  }
+  const bounds = new LngLatBounds()
+  const polygons =
+    geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates
+  for (const polygon of polygons) {
+    for (const ring of polygon) {
+      for (const position of ring) {
+        const lng = position[0]
+        const lat = position[1]
+        if (lng === undefined || lat === undefined) {
+          continue
+        }
+        bounds.extend([lng, lat])
+      }
+    }
+  }
+  if (bounds.isEmpty()) {
+    return fallback
+  }
+  const center = bounds.getCenter()
+  return [center.lng, center.lat]
+}
+
+function overlayPadding(): PaddingOptions {
+  const panel = overlayPanel.value
+  const desktop = window.matchMedia('(min-width: 64rem)').matches
+  const inset = 24
+  if (desktop) {
+    return {
+      top: inset,
+      bottom: inset,
+      left: inset,
+      right: (panel?.clientWidth ?? 0) + inset,
+    }
+  }
+  return {
+    top: inset,
+    left: inset,
+    right: inset,
+    bottom: (panel?.clientHeight ?? 0) + inset,
+  }
+}
+
+function flyToRoof(feature: MapGeoJSONFeature, event: MapMouseEvent) {
+  mapInstance?.flyTo({
+    center: roofCenter(feature, [event.lngLat.lng, event.lngLat.lat]),
+    zoom: MONTERIA_MAX_ZOOM,
+    padding: overlayPadding(),
+    essential: true,
+  })
+}
+
 function onBuildingClick(event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) {
   const feature = mapInstance?.queryRenderedFeatures(event.point, {
     layers: [OVERTURE_BUILDINGS_LAYER_ID],
   })[0]
-  selectRoof(feature ? parseRoofFeature(feature) : null)
+  const roof = feature ? parseRoofFeature(feature) : null
+  selectRoof(roof)
+  if (feature && roof) {
+    flyToRoof(feature, event)
+  }
 }
 
 function bindBuildingPointer() {
@@ -194,7 +260,7 @@ onUnmounted(() => {
     </div>
     <div class="map-overlay">
       <div class="map-overlay-spacer">
-        <div class="brand" aria-label="Solarfin">
+        <div class="brand" aria-label="Sunprofit">
           <svg
             class="brand-mark"
             viewBox="64 195 106 84"
@@ -289,7 +355,7 @@ onUnmounted(() => {
                  z"
             />
           </svg>
-          <span class="brand-word">solarfin</span>
+          <span class="brand-word">Sunprofit</span>
         </div>
       </div>
       <button
@@ -334,14 +400,13 @@ onUnmounted(() => {
           />
         </svg>
       </button>
-      <aside class="map-overlay-panel">
+      <aside ref="overlayPanel" class="map-overlay-panel">
         <RoofSavingsPanel
           v-model:estrato="estrato"
           v-model:consumption="consumption"
           :roof="selectedRoof"
           :theme="theme"
           :view="panelView"
-          @clear="selectRoof(null)"
         />
       </aside>
     </div>

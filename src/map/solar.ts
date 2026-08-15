@@ -12,6 +12,89 @@ export const PV_PERFORMANCE_RATIO = 0.8
 
 export const PV_SYSTEM_FACTOR = PV_MODULE_EFFICIENCY * PV_PERFORMANCE_RATIO
 
+/** Área típica de un módulo residencial (~400 W). */
+export const DEFAULT_PANEL_AREA_M2 = 2
+
+export type PanelArrayParams = {
+  panelCount: number
+  panelAreaM2: number
+  efficiency: number
+  performanceRatio: number
+  ghiKwhM2: number
+}
+
+export type PanelArraySimulation =
+  | { ok: true; arrayAreaM2: number; kwhYear: number }
+  | { ok: false; arrayAreaM2: number; reason: 'invalid' | 'exceeds_roof' }
+
+export function panelArrayAreaM2(
+  panelCount: number,
+  panelAreaM2: number,
+): number {
+  return panelCount * panelAreaM2
+}
+
+export function maxPanelCount(roofAreaM2: number, panelAreaM2: number): number {
+  if (!(roofAreaM2 > 0) || !(panelAreaM2 > 0)) {
+    return 0
+  }
+  return Math.floor(roofAreaM2 / panelAreaM2)
+}
+
+export function resolveGhiKwhM2(input: {
+  ghiKwhM2?: number
+  kwhYear: number
+  areaM2?: number
+}): number | null {
+  if (input.ghiKwhM2 !== undefined && input.ghiKwhM2 > 0) {
+    return input.ghiKwhM2
+  }
+  if (input.areaM2 !== undefined && input.areaM2 > 0) {
+    return input.kwhYear / (input.areaM2 * PV_SYSTEM_FACTOR)
+  }
+  return null
+}
+
+export function simulatePanelArray(
+  params: PanelArrayParams,
+  roofAreaM2: number,
+): PanelArraySimulation {
+  const arrayAreaM2 = panelArrayAreaM2(params.panelCount, params.panelAreaM2)
+  const valuesAreValid =
+    Number.isInteger(params.panelCount) &&
+    params.panelCount > 0 &&
+    params.panelAreaM2 > 0 &&
+    params.efficiency > 0 &&
+    params.efficiency <= 1 &&
+    params.performanceRatio > 0 &&
+    params.performanceRatio <= 1 &&
+    params.ghiKwhM2 > 0 &&
+    Number.isFinite(arrayAreaM2)
+
+  if (!valuesAreValid) {
+    return {
+      ok: false,
+      arrayAreaM2: Number.isFinite(arrayAreaM2) ? Math.max(0, arrayAreaM2) : 0,
+      reason: 'invalid',
+    }
+  }
+
+  if (!(roofAreaM2 > 0) || arrayAreaM2 - roofAreaM2 > 1e-6) {
+    return { ok: false, arrayAreaM2, reason: 'exceeds_roof' }
+  }
+
+  return {
+    ok: true,
+    arrayAreaM2,
+    kwhYear: Math.round(
+      params.ghiKwhM2 *
+        arrayAreaM2 *
+        params.efficiency *
+        params.performanceRatio,
+    ),
+  }
+}
+
 const LIGHT_STOPS = [
   [0, '#fed7aa'],
   [10_000, '#fdba74'],
