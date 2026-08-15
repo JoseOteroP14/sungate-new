@@ -9,17 +9,20 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     env_file: .env
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-sungate}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-sungate}
-      POSTGRES_HOST: db
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: ${POSTGRES_DB:-sungate}
-      POSTGRES_USER: ${POSTGRES_USER:-sungate}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
+    # The app is a static SPA (nginx). Nothing reads these, and there is no
+    # backend to talk to Postgres/PostGIS. Re-enable together with the `db`
+    # service when a server-side API exists.
+    # environment:
+    #   DATABASE_URL: postgresql://${POSTGRES_USER:-sungate}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-sungate}
+    #   POSTGRES_HOST: db
+    #   POSTGRES_PORT: "5432"
+    #   POSTGRES_DB: ${POSTGRES_DB:-sungate}
+    #   POSTGRES_USER: ${POSTGRES_USER:-sungate}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    #     restart: true
     networks:
       - sungate
     init: true
@@ -32,36 +35,39 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  db:
-    image: postgis/postgis:18-3.6
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-sungate}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: ${POSTGRES_DB:-sungate}
-    volumes:
-      # PostgreSQL 18+ changed the default volume path from /var/lib/postgresql/data
-      - postgres_data:/var/lib/postgresql
-    ports:
-      # Bind to loopback only — published 0.0.0.0:5432 is reachable from the internet.
-      - "127.0.0.1:5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - sungate
-    shm_size: 128mb
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # Unused until a backend needs spatial SQL. Leaving this commented also
+  # lets `docker compose up --remove-orphans` drop the production `db`
+  # container; the `postgres_data` volume is kept on disk.
+  # db:
+  #   image: postgis/postgis:18-3.6
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-sungate}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  #     POSTGRES_DB: ${POSTGRES_DB:-sungate}
+  #   volumes:
+  #     # PostgreSQL 18+ changed the default volume path from /var/lib/postgresql/data
+  #     - postgres_data:/var/lib/postgresql
+  #   ports:
+  #     # Bind to loopback only — published 0.0.0.0:5432 is reachable from the internet.
+  #     - "127.0.0.1:5432:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - sungate
+  #   shm_size: 128mb
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
 networks:
   sungate: {}
 
-volumes:
-  postgres_data: {}
+# volumes:
+#   postgres_data: {}
