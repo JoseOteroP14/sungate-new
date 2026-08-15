@@ -1,0 +1,25 @@
+﻿departamento,ciudad,empresa,periodo,nivel_tension,propiedad_activos,estrato,rango_consumo,tarifa_kwh_cop,tipo_tarifa
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 1,0 - 173 kWh (Subsistencia),505.92,Subsidiada (~50%)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 1,> 173 kWh (Consumo Superior),1008.41,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 2,0 - 173 kWh (Subsistencia),632.41,Subsidiada (~40%)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 2,> 173 kWh (Consumo Superior),1008.41,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 3,0 - 173 kWh (Subsistencia),857.15,Subsidiada (~15%)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 3,> 173 kWh (Consumo Superior),1008.41,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estrato 4,Todo consumo (0 - >173 kWh),1008.41,Tarifa Plena (Sin subsidio / Sin recargo)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad del OR,Estratos 5 y 6,Todo consumo (0 - >173 kWh),1210.09,Tarifa Plena + 20% Contribución Solidaridad
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 1,0 - 173 kWh (Subsistencia),497.78,Subsidiada
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 1,> 173 kWh (Consumo Superior),992.67,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 2,0 - 173 kWh (Subsistencia),622.23,Subsidiada
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 2,> 173 kWh (Consumo Superior),992.67,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 3,0 - 173 kWh (Subsistencia),843.77,Subsidiada
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 3,> 173 kWh (Consumo Superior),992.67,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estrato 4,Todo consumo (0 - >173 kWh),992.67,Tarifa Plena (Sin subsidio / Sin recargo)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Compartida,Estratos 5 y 6,Todo consumo (0 - >173 kWh),1191.21,Tarifa Plena + 20% Contribución Solidaridad
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 1,0 - 173 kWh (Subsistencia),489.64,Subsidiada
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 1,> 173 kWh (Consumo Superior),976.94,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 2,0 - 173 kWh (Subsistencia),612.05,Subsidiada
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 2,> 173 kWh (Consumo Superior),976.94,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 3,0 - 173 kWh (Subsistencia),830.4,Subsidiada
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 3,> 173 kWh (Consumo Superior),976.94,Tarifa Plena (CU con COT)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estrato 4,Todo consumo (0 - >173 kWh),976.94,Tarifa Plena (Sin subsidio / Sin recargo)
+Córdoba,Montería,Afinia S.A.S. E.S.P.,Julio 2026,Nivel 1 (< 1 kV),Propiedad Cliente,Estratos 5 y 6,Todo consumo (0 - >173 kWh),1172.33,Tarifa Plena + 20% Contribución Solidaridad

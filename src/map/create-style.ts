@@ -42,8 +42,9 @@ export function createMapcnStyle(theme: MapTheme): StyleSpecification {
       'overture-buildings': {
         type: 'vector',
         url: `pmtiles://${buildingsUrl}`,
+        promoteId: 'id',
         attribution:
-          '<a href="https://docs.overturemaps.org/attribution">Overture Maps</a>',
+          '<a href="https://docs.overturemaps.org/attribution">Overture Maps</a> · <a href="https://open-meteo.com/">Open-Meteo</a> (ECMWF IFS)',
       },
     },
     layers: mergedLayers as StyleSpecification['layers'],

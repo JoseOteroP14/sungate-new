@@ -17,4 +17,6 @@ LICENSE
 *.local
 coverage*
 *.log
+data
+scripts
 .DS_Store

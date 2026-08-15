@@ -1,16 +1,22 @@
 import type { LngLatBoundsLike, LngLatLike } from 'maplibre-gl'
 
+/** Municipio de Montería (OSM relation 1343449). Nominatim: minLon, minLat, maxLon, maxLat. */
+export const MONTERIA_BBOX = {
+  minLon: -76.2788082,
+  minLat: 8.263077,
+  maxLon: -75.6694089,
+  maxLat: 8.9463209,
+} as const
+
 /**
- * Municipio de Montería (OSM relation 1343449).
- * Bounding box from Nominatim: [minLat, maxLat, minLon, maxLon].
- *
  * Regenerar teselas:
  * pmtiles extract https://build.protomaps.com/YYYYMMDD.pmtiles public/tiles/monteria.pmtiles --bbox=-76.2788082,8.263077,-75.6694089,8.9463209
  * pmtiles extract https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/2026-07-22.0/buildings.pmtiles public/tiles/overture-buildings.pmtiles --bbox=-76.2788082,8.263077,-75.6694089,8.9463209
+ * bun run solar:build
  */
 export const MONTERIA_BOUNDS: LngLatBoundsLike = [
-  [-76.2788082, 8.263077],
-  [-75.6694089, 8.9463209],
+  [MONTERIA_BBOX.minLon, MONTERIA_BBOX.minLat],
+  [MONTERIA_BBOX.maxLon, MONTERIA_BBOX.maxLat],
 ]
 
 /** Vista inicial ~1.2 km al sur de Plaza de Bolívar. */

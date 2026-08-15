@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --bun vite",
     "build": "bun --bun vue-tsc -b && bun --bun vite build",
-    "preview": "bun --bun vite preview"
+    "preview": "bun --bun vite preview",
+    "solar:build": "bun --bun scripts/solar/build.ts"
   },
   "dependencies": {
     "@protomaps/basemaps": "^5.7.2",
@@ -18,11 +19,16 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@mapbox/vector-tile": "^3.0.0",
     "@types/bun": "^1.3.14",
+    "@types/pbf": "^3.0.5",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/tsconfig": "^0.9.1",
+    "geojson-vt": "^4.0.3",
+    "pbf": "^5.1.2",
     "typescript": "~7.0.2",
     "vite": "^8.2.1",
+    "vt-pbf": "^3.1.3",
     "vue-tsc": "^3.3.10"
   }
 }

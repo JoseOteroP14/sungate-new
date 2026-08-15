@@ -1,6 +1,11 @@
 # Local CLI used to extract regional PMTiles (not part of the app).
 tools/
 
+# Intermediate solar tile build artifacts (keep data/solar/ghi-grid.json).
+data/solar/*.geojsonseq
+data/solar/*.pmtiles
+data/solar/*.mbtiles
+
 # Logs
 logs
 *.log
