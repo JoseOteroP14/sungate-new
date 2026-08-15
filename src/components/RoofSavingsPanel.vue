@@ -15,12 +15,15 @@ import {
 } from '../tariffs/afinia'
 import type { SelectedRoof } from '../map/roof-feature'
 
+export type PanelView = 'bill' | 'roof'
+
 const estrato = defineModel<Estrato | null>('estrato', { default: null })
 const consumptionInput = defineModel<string>('consumption', { default: '' })
 
 const props = defineProps<{
   roof: SelectedRoof | null
   theme: 'light' | 'dark'
+  view: PanelView
 }>()
 
 const emit = defineEmits<{
@@ -66,15 +69,14 @@ const billEstimate = computed(() => {
   }
   const kwh = consumptionKwh.value
   const cop = energyBillCop(kwh, estrato.value)
-  const gridKwhAfter = savings.value?.gridKwhAfter
   return {
     kwh,
     cop,
     effectiveTariffCopKwh: cop / kwh,
     billAfterCop:
-      gridKwhAfter === undefined || gridKwhAfter === null
+      savings.value?.gridKwhAfter === undefined || savings.value.gridKwhAfter === null
         ? null
-        : energyBillCop(gridKwhAfter, estrato.value),
+        : energyBillCop(savings.value.gridKwhAfter, estrato.value),
   }
 })
 
@@ -82,31 +84,19 @@ const rates = computed(() =>
   estrato.value === null ? null : AFINIA_RATES[estrato.value],
 )
 
-const heroCop = computed(() => {
-  if (!savings.value) {
-    return billEstimate.value?.cop ?? null
-  }
-  return savings.value.billSavingsCop ?? savings.value.generationValueCop
-})
+const showBillResult = computed(() => consumptionKwh.value !== null)
 
-const heroLabel = computed(() => {
-  if (!savings.value) {
-    return 'Costo estimado de factura'
-  }
-  return savings.value.billSavingsCop === null
-    ? 'Ahorro potencial mensual'
-    : 'Ahorro estimado en factura'
-})
+const showRoofResult = computed(() => props.roof !== null)
 
-const showResult = computed(
-  () => savings.value !== null || consumptionKwh.value !== null,
+const showResult = computed(() =>
+  props.view === 'bill' ? showBillResult.value : showRoofResult.value,
 )
 
 function selectEstrato(value: Estrato) {
   estrato.value = value
 }
 
-watch(showResult, async (visible) => {
+watch([showResult, () => props.view], async ([visible]) => {
   if (!visible) {
     return
   }
@@ -117,129 +107,207 @@ watch(showResult, async (visible) => {
 
 <template>
   <div class="savings" :data-theme="theme">
-    <header class="savings-header">
-      <p class="savings-kicker">{{ AFINIA_TARIFF_META.periodo }}</p>
-      <h2 class="savings-title">Ahorro en tu techo</h2>
-      <p class="savings-lede">
-        Elige tu estrato y toca un edificio para estimar el valor de la energía
-        solar a la tarifa residencial de la zona.
-      </p>
-    </header>
+    <template v-if="view === 'bill'">
+      <header class="savings-header">
+        <p class="savings-kicker">{{ AFINIA_TARIFF_META.periodo }}</p>
+        <h2 class="savings-title">Simular factura</h2>
+        <p class="savings-lede">
+          Elige tu estrato e ingresa el consumo mensual para estimar el valor de
+          la energía a la tarifa residencial de la zona.
+        </p>
+      </header>
 
-    <fieldset class="estrato">
-      <legend>Estrato socioeconómico</legend>
-      <div class="estrato-grid" role="radiogroup" aria-label="Estrato">
-        <button
-          v-for="value in ESTRATOS"
-          :key="value"
-          type="button"
-          class="estrato-btn"
-          role="radio"
-          :aria-checked="estrato === value"
-          :data-active="estrato === value"
-          @click="selectEstrato(value)"
-        >
-          {{ value }}
-        </button>
-      </div>
-      <p v-if="rates" class="estrato-rate">
-        <template v-if="rates.subsistenceCopKwh !== null">
-          {{ formatCopPerKwh(rates.subsistenceCopKwh) }} hasta
-          {{ SUBSISTENCE_KWH }} kWh ·
-          {{ formatCopPerKwh(rates.plenaCopKwh) }} el resto
+      <fieldset class="estrato">
+        <legend>Estrato socioeconómico</legend>
+        <div class="estrato-grid" role="radiogroup" aria-label="Estrato">
+          <button
+            v-for="value in ESTRATOS"
+            :key="value"
+            type="button"
+            class="estrato-btn"
+            role="radio"
+            :aria-checked="estrato === value"
+            :data-active="estrato === value"
+            @click="selectEstrato(value)"
+          >
+            {{ value }}
+          </button>
+        </div>
+        <p v-if="rates" class="estrato-rate">
+          <template v-if="rates.subsistenceCopKwh !== null">
+            {{ formatCopPerKwh(rates.subsistenceCopKwh) }} hasta
+            {{ SUBSISTENCE_KWH }} kWh ·
+            {{ formatCopPerKwh(rates.plenaCopKwh) }} el resto
+          </template>
+          <template v-else>
+            {{ formatCopPerKwh(rates.plenaCopKwh) }} · {{ rates.tipo }}
+          </template>
+        </p>
+      </fieldset>
+
+      <label class="consumption">
+        <span>Consumo mensual (kWh)</span>
+        <input
+          :value="String(consumptionInput ?? '')"
+          type="text"
+          inputmode="decimal"
+          placeholder="Ej. 180"
+          autocomplete="off"
+          @input="onConsumptionInput"
+        />
+        <span class="consumption-hint">
+          El costo de factura se actualiza al escribir. El estrato y el consumo
+          también se usan al calcular el ahorro de un techo.
+        </span>
+      </label>
+
+      <div v-if="showBillResult" ref="result" class="result">
+        <template v-if="billEstimate === null">
+          <p class="result-label">Costo estimado de factura</p>
+          <p class="result-note">
+            Selecciona tu estrato para calcular el valor con tu consumo.
+          </p>
         </template>
         <template v-else>
-          {{ formatCopPerKwh(rates.plenaCopKwh) }} · {{ rates.tipo }}
+          <p class="result-label">Costo estimado de factura</p>
+          <p class="result-value">{{ formatCop(billEstimate.cop) }}</p>
+          <dl class="result-stats">
+            <div>
+              <dt>Consumo</dt>
+              <dd>{{ formatKwh(billEstimate.kwh) }} kWh/mes</dd>
+            </div>
+            <div>
+              <dt>Tarifa efectiva</dt>
+              <dd>{{ formatCopPerKwh(billEstimate.effectiveTariffCopKwh) }}</dd>
+            </div>
+          </dl>
         </template>
+      </div>
+
+      <p v-else-if="estrato === null" class="empty">
+        Primero selecciona tu estrato.
       </p>
-    </fieldset>
+      <p v-else class="empty">
+        Ingresa tu consumo mensual para simular la factura.
+      </p>
+    </template>
 
-    <label class="consumption">
-      <span>Consumo mensual (kWh)</span>
-      <input
-        :value="String(consumptionInput ?? '')"
-        type="text"
-        inputmode="decimal"
-        placeholder="Ej. 180"
-        autocomplete="off"
-        @input="onConsumptionInput"
-      />
-      <span class="consumption-hint">
-        El costo de factura se actualiza al escribir. Si también eliges un techo,
-        se estima el ahorro solar sobre ese consumo.
-      </span>
-    </label>
+    <template v-else>
+      <header class="savings-header">
+        <p class="savings-kicker">{{ AFINIA_TARIFF_META.periodo }}</p>
+        <h2 class="savings-title">Ahorro en tu techo</h2>
+        <p class="savings-lede">
+          Toca un edificio para estimar el valor de la energía solar a la tarifa
+          residencial de la zona.
+        </p>
+      </header>
 
-    <div v-if="showResult" ref="result" class="result">
-      <template v-if="heroCop === null">
-        <p class="result-label">Costo estimado de factura</p>
-        <p class="result-note">
-          Selecciona tu estrato para calcular el valor con tu consumo.
+      <fieldset class="estrato">
+        <legend>Estrato socioeconómico</legend>
+        <div class="estrato-grid" role="radiogroup" aria-label="Estrato">
+          <button
+            v-for="value in ESTRATOS"
+            :key="value"
+            type="button"
+            class="estrato-btn"
+            role="radio"
+            :aria-checked="estrato === value"
+            :data-active="estrato === value"
+            @click="selectEstrato(value)"
+          >
+            {{ value }}
+          </button>
+        </div>
+        <p v-if="rates" class="estrato-rate">
+          <template v-if="rates.subsistenceCopKwh !== null">
+            {{ formatCopPerKwh(rates.subsistenceCopKwh) }} hasta
+            {{ SUBSISTENCE_KWH }} kWh ·
+            {{ formatCopPerKwh(rates.plenaCopKwh) }} el resto
+          </template>
+          <template v-else>
+            {{ formatCopPerKwh(rates.plenaCopKwh) }} · {{ rates.tipo }}
+          </template>
         </p>
-      </template>
-      <template v-else>
-        <p class="result-label">{{ heroLabel }}</p>
-        <p class="result-value">{{ formatCop(heroCop) }}</p>
-        <dl v-if="savings && roof" class="result-stats">
-          <div>
-            <dt>Generación</dt>
-            <dd>{{ formatKwh(savings.kwhMonth) }} kWh/mes</dd>
-          </div>
-          <div v-if="roof.areaM2 !== undefined">
-            <dt>Área del techo</dt>
-            <dd>{{ formatQuantity(roof.areaM2) }} m²</dd>
-          </div>
-          <div v-if="billEstimate">
-            <dt>Consumo</dt>
-            <dd>{{ formatKwh(billEstimate.kwh) }} kWh/mes</dd>
-          </div>
-          <div v-if="billEstimate">
-            <dt>Factura actual</dt>
-            <dd>{{ formatCop(billEstimate.cop) }}</dd>
-          </div>
-          <div v-if="billEstimate && billEstimate.billAfterCop !== null">
-            <dt>Factura con solar</dt>
-            <dd>{{ formatCop(billEstimate.billAfterCop) }}</dd>
-          </div>
-          <div>
-            <dt>Tarifa efectiva</dt>
-            <dd>{{ formatCopPerKwh(savings.effectiveTariffCopKwh) }}</dd>
-          </div>
-          <div>
-            <dt>Potencial anual</dt>
-            <dd>{{ formatKwh(roof.kwhYear) }} kWh</dd>
-          </div>
-        </dl>
-        <dl v-else-if="billEstimate" class="result-stats">
-          <div>
-            <dt>Consumo</dt>
-            <dd>{{ formatKwh(billEstimate.kwh) }} kWh/mes</dd>
-          </div>
-          <div>
-            <dt>Tarifa efectiva</dt>
-            <dd>{{ formatCopPerKwh(billEstimate.effectiveTariffCopKwh) }}</dd>
-          </div>
-        </dl>
-        <p v-if="savings && savings.surplusKwh > 0" class="result-note">
-          Excedente estimado: {{ formatKwh(savings.surplusKwh) }} kWh/mes. No se
-          incluye en el ahorro de factura (la venta a red suele pagarse por debajo
-          de la tarifa plena).
-        </p>
-        <p v-else-if="billEstimate && !roof" class="result-note">
-          Toca un techo en el mapa para estimar cuánto podrías ahorrar con solar.
-        </p>
-        <button v-if="roof" type="button" class="clear" @click="emit('clear')">
+      </fieldset>
+
+      <div v-if="showRoofResult && roof" ref="result" class="result">
+        <template v-if="savings">
+          <p class="result-label">
+            {{
+              savings.billSavingsCop === null
+                ? 'Ahorro potencial mensual'
+                : 'Ahorro estimado en factura'
+            }}
+          </p>
+          <p class="result-value">
+            {{ formatCop(savings.billSavingsCop ?? savings.generationValueCop) }}
+          </p>
+          <dl class="result-stats">
+            <div>
+              <dt>Generación</dt>
+              <dd>{{ formatKwh(savings.kwhMonth) }} kWh/mes</dd>
+            </div>
+            <div v-if="roof.areaM2 !== undefined">
+              <dt>Área del techo</dt>
+              <dd>{{ formatQuantity(roof.areaM2) }} m²</dd>
+            </div>
+            <div v-if="billEstimate">
+              <dt>Consumo</dt>
+              <dd>{{ formatKwh(billEstimate.kwh) }} kWh/mes</dd>
+            </div>
+            <div v-if="billEstimate">
+              <dt>Factura actual</dt>
+              <dd>{{ formatCop(billEstimate.cop) }}</dd>
+            </div>
+            <div v-if="billEstimate && billEstimate.billAfterCop !== null">
+              <dt>Factura con solar</dt>
+              <dd>{{ formatCop(billEstimate.billAfterCop) }}</dd>
+            </div>
+            <div>
+              <dt>Tarifa efectiva</dt>
+              <dd>{{ formatCopPerKwh(savings.effectiveTariffCopKwh) }}</dd>
+            </div>
+            <div>
+              <dt>Potencial anual</dt>
+              <dd>{{ formatKwh(roof.kwhYear) }} kWh</dd>
+            </div>
+          </dl>
+          <p v-if="savings.surplusKwh > 0" class="result-note">
+            Excedente estimado: {{ formatKwh(savings.surplusKwh) }} kWh/mes. No se
+            incluye en el ahorro de factura (la venta a red suele pagarse por debajo
+            de la tarifa plena).
+          </p>
+          <p v-else-if="!billEstimate" class="result-note">
+            Simula tu factura para estimar el ahorro sobre tu consumo.
+          </p>
+        </template>
+        <template v-else>
+          <p class="result-label">Potencial del techo</p>
+          <p class="result-value">{{ formatKwh(roof.kwhYear) }} kWh</p>
+          <dl class="result-stats">
+            <div>
+              <dt>Generación</dt>
+              <dd>{{ formatKwh(roof.kwhYear / 12) }} kWh/mes</dd>
+            </div>
+            <div v-if="roof.areaM2 !== undefined">
+              <dt>Área del techo</dt>
+              <dd>{{ formatQuantity(roof.areaM2) }} m²</dd>
+            </div>
+          </dl>
+          <p class="result-note">
+            Selecciona tu estrato para ver el ahorro en pesos con la tarifa
+            residencial de la zona.
+          </p>
+        </template>
+        <button type="button" class="clear" @click="emit('clear')">
           Elegir otro techo
         </button>
-      </template>
-    </div>
+      </div>
 
-    <p v-else-if="estrato === null" class="empty">
-      Primero selecciona tu estrato.
-    </p>
-    <p v-else class="empty">
-      Ingresa tu consumo o toca un techo para calcular el ahorro.
-    </p>
+      <p v-else class="empty">
+        Toca un techo en el mapa para calcular el ahorro potencial.
+      </p>
+    </template>
 
     <p class="fineprint">
       Nivel 1 · {{ AFINIA_TARIFF_META.ownership }}. Estimado con η 20 % y PR 80 %.
