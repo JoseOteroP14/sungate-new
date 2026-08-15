@@ -107,34 +107,18 @@ La clave **pública** correspondiente a `DEPLOY_SSH_KEY` debe estar en `/home/de
 
 DNS: el dominio (`sungate.salesconnect.dev`) debe apuntar a la IP del VPS.
 
-El compose de producción publica la app en **`127.0.0.1:8080`**, no en `0.0.0.0`. El proxy TLS del host (Caddy, nginx o Traefik) debe reenviar al loopback.
+En producción, Caddy (servicio `proxy` en `compose.prod.yaml`) escucha en **80/443**, pide el certificado Let's Encrypt y reenvía a `app:8080` en la red de Compose. La app sigue publicada solo en `127.0.0.1:8080` (útil para `curl` en el propio servidor).
 
-Caddy en el host:
+En AWS EC2 abre el **Security Group** de la instancia: inbound TCP **22**, **80** y **443** desde `0.0.0.0/0`. Sin 80/443 el dominio hace timeout aunque Compose esté healthy. No abras 5432 ni 8080 al mundo.
 
-```caddy
-sungate.salesconnect.dev {
-  encode gzip
-  reverse_proxy 127.0.0.1:8080
-}
+En el servidor, si `ufw` está activo:
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
 ```
-
-nginx en el host:
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name sungate.salesconnect.dev;
-    # ssl_certificate / ssl_certificate_key …
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Abre 22, 80 y 443 en el firewall; **no** abras 5432 ni 8080 al mundo.
 
 ## 4. Primer deploy
 

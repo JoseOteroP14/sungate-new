@@ -60,29 +60,40 @@ SCP=(
 
 REMOTE="${DEPLOY_USER}@${DEPLOY_HOST}"
 
-python3 - "${SUNGATE_IMAGE}" "${POSTGRES_USER}" "${POSTGRES_PASSWORD}" "${POSTGRES_DB}" "${DOMAIN:-}" <<'PY'
+require DOMAIN
+
+python3 - "${SUNGATE_IMAGE}" "${POSTGRES_USER}" "${POSTGRES_PASSWORD}" "${POSTGRES_DB}" "${DOMAIN}" <<'PY'
 import pathlib, sys
+from urllib.parse import urlparse
 
 def quoted(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 image, user, password, db, domain = sys.argv[1:6]
+raw = domain.strip()
+if "://" not in raw:
+    raw = "https://" + raw
+host = urlparse(raw).hostname
+if not host:
+    raise SystemExit(f"DOMAIN must be a hostname or URL, got: {domain!r}")
+
 lines = [
     f"SUNGATE_IMAGE={quoted(image)}",
     f"POSTGRES_USER={quoted(user)}",
     f"POSTGRES_PASSWORD={quoted(password)}",
     f"POSTGRES_DB={quoted(db)}",
+    f"DOMAIN={quoted(domain)}",
+    f"APP_HOST={quoted(host)}",
     f"COMPOSE_FILE={quoted('compose.yaml:compose.prod.yaml')}",
 ]
-if domain:
-    lines.append(f"DOMAIN={quoted(domain)}")
 path = pathlib.Path(".env.deploy")
 path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 path.chmod(0o600)
 PY
 
-"${SSH[@]}" "${REMOTE}" "mkdir -p '${DEPLOY_PATH}'"
+"${SSH[@]}" "${REMOTE}" "mkdir -p '${DEPLOY_PATH}/docker'"
 "${SCP[@]}" compose.yaml compose.prod.yaml "${REMOTE}:${DEPLOY_PATH}/"
+"${SCP[@]}" docker/Caddyfile "${REMOTE}:${DEPLOY_PATH}/docker/"
 "${SCP[@]}" .env.deploy "${REMOTE}:${DEPLOY_PATH}/.env"
 rm -f .env.deploy
 

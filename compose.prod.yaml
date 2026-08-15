@@ -4,6 +4,7 @@
 # bare `docker compose up` picks this overlay automatically.
 #
 # Pulls a pre-built image from GHCR — the server never builds the app.
+# Caddy terminates TLS (Let's Encrypt) and proxies to the app on the Compose network.
 
 name: sungate
 
@@ -12,3 +13,34 @@ services:
     image: ${SUNGATE_IMAGE:?Set SUNGATE_IMAGE in .env}
     build: !reset null
     pull_policy: always
+
+  proxy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_HOST: ${APP_HOST:?Set APP_HOST in .env (hostname only, no https://)}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+        restart: true
+    networks:
+      - sungate
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}
