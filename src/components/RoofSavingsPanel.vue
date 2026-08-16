@@ -222,11 +222,7 @@ const savings = computed(() => {
   ) {
     return null
   }
-  return estimateRoofSavings(
-    simulatedKwhYear.value,
-    estrato.value,
-    consumptionKwh.value,
-  )
+  return estimateRoofSavings(simulatedKwhYear.value, estrato.value, null)
 })
 
 const monthlySavingsCop = computed(() => {
@@ -279,10 +275,6 @@ const billEstimate = computed(() => {
     kwh,
     cop,
     effectiveTariffCopKwh: cop / kwh,
-    billAfterCop:
-      savings.value?.gridKwhAfter === undefined || savings.value.gridKwhAfter === null
-        ? null
-        : energyBillCop(savings.value.gridKwhAfter, estrato.value),
   }
 })
 
@@ -341,8 +333,8 @@ watch([showResult, () => props.view], async ([visible]) => {
 </script>
 
 <template>
-  <div class="savings" :data-theme="theme">
-    <template v-if="view === 'bill'">
+  <div class="savings" :data-theme="theme" :key="view">
+    <template v-if="view === 'bill'" :key="'bill'">
       <header class="savings-header">
         <h2 class="savings-title">Simular factura</h2>
         <p class="savings-lede">
@@ -383,6 +375,7 @@ watch([showResult, () => props.view], async ([visible]) => {
         <span>Consumo mensual (kWh)</span>
         <input
           :value="String(consumptionInput ?? '')"
+          name="bill-monthly-kwh"
           type="text"
           inputmode="decimal"
           pattern="[0-9]*[.,]?[0-9]*"
@@ -392,8 +385,7 @@ watch([showResult, () => props.view], async ([visible]) => {
           @input="onConsumptionInput"
         />
         <span class="consumption-hint">
-          El costo de factura se actualiza al escribir. El estrato y el consumo
-          también se usan al calcular el ahorro de un techo.
+          El costo de factura se actualiza al escribir.
         </span>
       </label>
 
@@ -428,7 +420,7 @@ watch([showResult, () => props.view], async ([visible]) => {
       </p>
     </template>
 
-    <template v-else>
+    <template v-else :key="'roof'">
       <header class="savings-header">
         <h2 class="savings-title">Ahorro en tu techo</h2>
       </header>
@@ -467,6 +459,7 @@ watch([showResult, () => props.view], async ([visible]) => {
             <span>Cantidad de paneles</span>
             <input
               :value="panelCountInput"
+              name="roof-panel-count"
               type="text"
               inputmode="numeric"
               pattern="[0-9]*"
@@ -482,6 +475,7 @@ watch([showResult, () => props.view], async ([visible]) => {
             <span>Área de cada panel (m²)</span>
             <input
               :value="panelAreaInput"
+              name="roof-panel-area"
               type="text"
               inputmode="decimal"
               pattern="[0-9]*[.,]?[0-9]*"
@@ -497,6 +491,7 @@ watch([showResult, () => props.view], async ([visible]) => {
             <span>Eficiencia del panel (%)</span>
             <input
               :value="efficiencyInput"
+              name="roof-panel-efficiency"
               type="text"
               inputmode="decimal"
               pattern="[0-9]*[.,]?[0-9]*"
@@ -510,6 +505,7 @@ watch([showResult, () => props.view], async ([visible]) => {
             <span>Rendimiento (%)</span>
             <input
               :value="performanceRatioInput"
+              name="roof-performance-ratio"
               type="text"
               inputmode="decimal"
               pattern="[0-9]*[.,]?[0-9]*"
@@ -523,6 +519,7 @@ watch([showResult, () => props.view], async ([visible]) => {
             <span>Precio de cada panel (COP)</span>
             <input
               :value="panelPriceInput"
+              name="roof-panel-price"
               type="text"
               inputmode="numeric"
               pattern="[0-9]*"
@@ -1004,18 +1001,6 @@ watch([showResult, () => props.view], async ([visible]) => {
             <div v-if="roof.areaM2 !== undefined">
               <dt>Área del techo</dt>
               <dd>{{ formatQuantity(roof.areaM2) }} m²</dd>
-            </div>
-            <div v-if="billEstimate">
-              <dt>Consumo</dt>
-              <dd>{{ formatKwh(billEstimate.kwh) }} kWh/mes</dd>
-            </div>
-            <div v-if="billEstimate">
-              <dt>Factura actual</dt>
-              <dd>{{ formatCop(billEstimate.cop) }}</dd>
-            </div>
-            <div v-if="billEstimate && billEstimate.billAfterCop !== null">
-              <dt>Factura con solar</dt>
-              <dd>{{ formatCop(billEstimate.billAfterCop) }}</dd>
             </div>
             <div>
               <dt>Tarifa efectiva</dt>

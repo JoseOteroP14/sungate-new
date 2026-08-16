@@ -260,13 +260,14 @@ onUnmounted(() => {
     </div>
     <div class="map-overlay">
       <div class="map-overlay-spacer">
-        <div class="brand" aria-label="Sunprofit">
-          <svg
-            class="brand-mark"
-            viewBox="64 195 106 84"
-            aria-hidden="true"
-            focusable="false"
-          >
+        <div class="brand" aria-label="Sunprofit by Blacksmith">
+          <div class="brand-lockup">
+            <svg
+              class="brand-mark"
+              viewBox="64 195 106 84"
+              aria-hidden="true"
+              focusable="false"
+            >
             <path
               d="m 130.82706 198.64815
                  c 1.67174 4.32252 6.31283 8.55257 9.20755 12.17084
@@ -354,8 +355,10 @@ onUnmounted(() => {
                    -6.48021 3.23802 -13.41846 7.9854 -20.37291 9.98883
                  z"
             />
-          </svg>
-          <span class="brand-word">Sunprofit</span>
+            </svg>
+            <span class="brand-word">Sunprofit</span>
+          </div>
+          <span class="brand-byline">By Blacksmith</span>
         </div>
       </div>
       <button
@@ -447,10 +450,17 @@ onUnmounted(() => {
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.75rem;
   width: max-content;
   color: #fff;
   filter: drop-shadow(0 1px 10px rgb(0 0 0 / 0.42));
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
 }
 
 .brand-mark {
@@ -463,18 +473,27 @@ onUnmounted(() => {
 
 .brand-word {
   font-family: var(--savings-display);
-  font-size: 1.55rem;
+  font-size: 1.05rem;
   font-weight: 600;
   font-optical-sizing: auto;
   letter-spacing: 0.01em;
   line-height: 1;
 }
 
+.brand-byline {
+  font-family: var(--savings-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
 .solar-legend {
   position: absolute;
   z-index: 6;
   left: 16px;
-  top: 4.75rem;
+  top: 6.25rem;
   width: min(18rem, calc(100% - 32px));
   padding: 12px 14px 10px;
   border: 1px solid rgb(255 255 255 / 0.45);
